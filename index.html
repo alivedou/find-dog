@@ -16,16 +16,22 @@ h1{text-align:center;font-size:clamp(2rem,6vw,3.6rem);background:linear-gradient
 .bar{height:10px;background:#233;overflow:hidden;border-radius:99px;margin:16px 0}
 .fill{height:100%;width:0;background:linear-gradient(90deg,#48d26d,#8cff8c);transition:width .4s}
 #result{display:none;text-align:center;animation:fade .5s}
-img{width:min(420px,100%);aspect-ratio:1;object-fit:cover;border-radius:18px;border:4px solid #ffd54d;background:#222}
-.quote{margin:18px;color:#d6d6d6;font-size:1.1rem}
+.dog{font-size:8rem;display:inline-block;animation:wag 1s infinite alternate ease-in-out}
+@keyframes wag{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+.quote{margin:18px;color:#d6d6d6;font-size:1.1rem;min-height:1.5em}
 .btns{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:18px}
-button{border:none;border-radius:10px;padding:12px 20px;cursor:pointer;font-size:15px}
-.primary{background:#ffbf47}
+button{border:none;border-radius:10px;padding:12px 20px;cursor:pointer;font-size:15px;transition:all .2s}
+.primary{background:#ffbf47;color:#1a1a2e;font-weight:600}
+.primary:hover{background:#ffc967;transform:translateY(-2px)}
 .secondary{background:#374151;color:#fff}
+.secondary:hover{background:#4b5563}
+.secondary.copied{background:#4ade80!important;color:#1a1a2e!important}
 footer{text-align:center;margin-top:20px;color:#7f8794}
 @keyframes fade{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 .shake{animation:shake .35s}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.flash{animation:flash .35s}
+@keyframes flash{0%{background:radial-gradient(circle at top,#243b55,#141826 60%,#0b0d13)}50%{background:radial-gradient(circle at top,#ffd54d,#141826 60%,#0b0d13)}100%{background:radial-gradient(circle at top,#243b55,#141826 60%,#0b0d13)}}
 </style>
 </head>
 <body>
@@ -41,11 +47,11 @@ footer{text-align:center;margin-top:20px;color:#7f8794}
 <div id="result">
 <h1>🎯 找着了，就是你。</h1>
 <p class="sub">（不要慌，只是随机抽中的一只狗 🐶）</p>
-<img id="dog" alt="dog">
+<div class="dog" id="dog">🐶</div>
 <div class="quote" id="quote"></div>
 <div class="btns">
-<button class="primary" onclick="loadDog()">🐶 再抓一只</button>
-<button class="secondary" onclick="share()">📋 分享</button>
+<button class="primary" onclick="nextDog()">🐶 再抓一只</button>
+<button class="secondary" id="shareBtn" onclick="share()">📋 分享</button>
 </div>
 </div>
 <footer>find.exp.dog</footer>
@@ -58,38 +64,57 @@ const tips=[
 "已通知版主（假的）。",
 "水帖嫌疑人已锁定。",
 "论坛最靓的狗出现了。",
-"放心，这只是随机抽中的狗。"
+"放心，这只是随机抽中的狗。",
+"今日水经验指数：99%。"
 ];
-async function loadDog(){
-const q=document.getElementById('quote');
-q.textContent="正在寻找新的目标...";
-try{
-const r=await fetch("https://dog.ceo/api/breeds/image/random");
-const d=await r.json();
-document.getElementById('dog').src=d.message;
-q.textContent=tips[Math.floor(Math.random()*tips.length)];
-}catch(e){q.textContent="狗狗跑丢了，请稍后再试。";}
+const dogs=["🐶","🐕","🦮","🐕‍🦺","🐩","🦴","🐾"];
+function nextDog(){
+  const q=document.getElementById('quote');
+  const d=document.getElementById('dog');
+  d.textContent=dogs[Math.floor(Math.random()*dogs.length)];
+  q.textContent=tips[Math.floor(Math.random()*tips.length)];
 }
 function share(){
-navigator.clipboard.writeText(location.href).then(()=>alert("链接已复制！"));
+  const url=location.href;
+  const btn=document.getElementById('shareBtn');
+  const ok=()=>{
+    btn.textContent="✅ 已复制";
+    btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent="📋 分享";btn.classList.remove('copied');},1500);
+  };
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(url).then(ok,fallback);
+  }else{
+    fallback();
+  }
+  function fallback(){
+    const ta=document.createElement('textarea');
+    ta.value=url;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');ok();}
+    catch(e){prompt("手动复制：",url);}
+    document.body.removeChild(ta);
+  }
 }
 const msgs=["读取发帖记录...","分析水经验指数...","锁定可疑目标...","目标确认..."];
 let p=0,i=0;
 const t=setInterval(()=>{
-p+=5;
-document.getElementById('f').style.width=p+"%";
-document.getElementById('s1').textContent=p+"%";
-document.getElementById('status').textContent=msgs[Math.min(i,msgs.length-1)];
-if(p%25===0)i++;
-if(p>=100){
-clearInterval(t);
-document.getElementById('panel').classList.add('shake');
-setTimeout(()=>{
-document.getElementById('scan').style.display='none';
-document.getElementById('result').style.display='block';
-loadDog();
-},450);
-}
+  p+=5;
+  document.getElementById('f').style.width=p+"%";
+  document.getElementById('s1').textContent=p+"%";
+  document.getElementById('status').textContent=msgs[Math.min(i,msgs.length-1)];
+  if(p%25===0)i++;
+  if(p>=100){
+    clearInterval(t);
+    document.body.classList.add('flash');
+    document.getElementById('panel').classList.add('shake');
+    setTimeout(()=>{
+      document.body.classList.remove('flash');
+      document.getElementById('scan').style.display='none';
+      document.getElementById('result').style.display='block';
+      nextDog();
+    },450);
+  }
 },100);
 </script>
 </body></html>
