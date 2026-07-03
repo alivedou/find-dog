@@ -1,71 +1,95 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>找着了，就是你。</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #1a1a2e;
-      color: #eee;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      text-align: center;
-      flex-direction: column;
-    }
-    h1 {
-      font-size: clamp(2rem, 6vw, 4rem);
-      margin-bottom: 1.5rem;
-      background: linear-gradient(90deg, #f7971e, #ffd200);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .dog {
-      font-size: 8rem;
-      animation: bounce 0.6s infinite alternate ease-in-out;
-    }
-    @keyframes bounce {
-      from { transform: translateY(0) rotate(-3deg); }
-      to   { transform: translateY(-15px) rotate(3deg); }
-    }
-    .share-btn {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      background: none;
-      border: 1px solid #444;
-      color: #888;
-      padding: 6px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: all .2s;
-    }
-    .share-btn:hover { border-color: #f7971e; color: #f7971e; }
-    .share-btn.copied { border-color: #4ade80; color: #4ade80; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>找着了，就是你。- find.exp.dog</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top,#243b55,#141826 60%,#0b0d13);color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden}
+.wrap{width:min(92%,760px)}
+.panel{background:rgba(255,255,255,.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.08);padding:28px;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+h1{text-align:center;font-size:clamp(2rem,6vw,3.6rem);background:linear-gradient(90deg,#ffb347,#ffd54d);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{text-align:center;color:#b8c0d0;margin:8px 0 20px}
+#scan{font-family:Consolas,monospace;background:#0b1220;padding:18px;border-radius:14px}
+.line{display:flex;justify-content:space-between;padding:6px 0;color:#8fe388}
+.bar{height:10px;background:#233;overflow:hidden;border-radius:99px;margin:16px 0}
+.fill{height:100%;width:0;background:linear-gradient(90deg,#48d26d,#8cff8c);transition:width .4s}
+#result{display:none;text-align:center;animation:fade .5s}
+img{width:min(420px,100%);aspect-ratio:1;object-fit:cover;border-radius:18px;border:4px solid #ffd54d;background:#222}
+.quote{margin:18px;color:#d6d6d6;font-size:1.1rem}
+.btns{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:18px}
+button{border:none;border-radius:10px;padding:12px 20px;cursor:pointer;font-size:15px}
+.primary{background:#ffbf47}
+.secondary{background:#374151;color:#fff}
+footer{text-align:center;margin-top:20px;color:#7f8794}
+@keyframes fade{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+</style>
 </head>
 <body>
-  <button class="share-btn" onclick="copyLink()">📋 分享</button>
-  <h1>找着了，就是你。</h1>
-  <div class="dog">🐶</div>
-  <script>
-    function copyLink() {
-      const btn = document.querySelector('.share-btn');
-      navigator.clipboard.writeText('https://find.exp.dog').then(() => {
-        btn.textContent = '✅ 已复制';
-        btn.classList.add('copied');
-        setTimeout(() => {
-          btn.textContent = '📋 分享';
-          btn.classList.remove('copied');
-        }, 1500);
-      });
-    }
-  </script>
-</body>
-</html>
-
+<div class="wrap">
+<div class="panel" id="panel">
+<h1>🔍 正在全网寻找水经验的人…</h1>
+<div class="sub">find.exp.dog 正在分析论坛发帖记录</div>
+<div id="scan">
+<div class="line"><span>✓ 已连接论坛数据库</span><span id="s1">0%</span></div>
+<div class="bar"><div class="fill" id="f"></div></div>
+<div class="line"><span id="status">准备扫描…</span><span>Scanning...</span></div>
+</div>
+<div id="result">
+<h1>🎯 找着了，就是你。</h1>
+<p class="sub">（不要慌，只是随机抽中的一只狗 🐶）</p>
+<img id="dog" alt="dog">
+<div class="quote" id="quote"></div>
+<div class="btns">
+<button class="primary" onclick="loadDog()">🐶 再抓一只</button>
+<button class="secondary" onclick="share()">📋 分享</button>
+</div>
+</div>
+<footer>find.exp.dog</footer>
+</div>
+</div>
+<script>
+const tips=[
+"经验+1。",
+"今天也是认真水经验的一天。",
+"已通知版主（假的）。",
+"水帖嫌疑人已锁定。",
+"论坛最靓的狗出现了。",
+"放心，这只是随机抽中的狗。"
+];
+async function loadDog(){
+const q=document.getElementById('quote');
+q.textContent="正在寻找新的目标...";
+try{
+const r=await fetch("https://dog.ceo/api/breeds/image/random");
+const d=await r.json();
+document.getElementById('dog').src=d.message;
+q.textContent=tips[Math.floor(Math.random()*tips.length)];
+}catch(e){q.textContent="狗狗跑丢了，请稍后再试。";}
+}
+function share(){
+navigator.clipboard.writeText(location.href).then(()=>alert("链接已复制！"));
+}
+const msgs=["读取发帖记录...","分析水经验指数...","锁定可疑目标...","目标确认..."];
+let p=0,i=0;
+const t=setInterval(()=>{
+p+=5;
+document.getElementById('f').style.width=p+"%";
+document.getElementById('s1').textContent=p+"%";
+document.getElementById('status').textContent=msgs[Math.min(i,msgs.length-1)];
+if(p%25===0)i++;
+if(p>=100){
+clearInterval(t);
+document.getElementById('panel').classList.add('shake');
+setTimeout(()=>{
+document.getElementById('scan').style.display='none';
+document.getElementById('result').style.display='block';
+loadDog();
+},450);
+}
+},100);
+</script>
+</body></html>
