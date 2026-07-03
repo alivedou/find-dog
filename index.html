@@ -82,29 +82,11 @@ footer{text-align:center;margin-top:20px;color:#7f8794}
 </footer>
 </div>
 <script>
-const FALLBACK_API = 'http://node1.adky.net:3161';
-let API = localStorage.getItem('tunnel') || '';
+const API = 'https://dog-kv-api.trueadou.workers.dev';
 let visited = sessionStorage.getItem('v') === '1';
 
-// 拿 HTTPS 隧道地址，优先用缓存
-function initAPI(){
-  if(API) return Promise.resolve(API);
-  return fetch(FALLBACK_API+'/api/tunnel-url')
-    .then(r=>r.json())
-    .then(d=>{
-      if(d.url){ API=d.url; localStorage.setItem('tunnel', API); }
-      return API;
-    })
-    .catch(()=>{
-      // 如果 HTTPS 页调不了 HTTP，退回到直连（仅 HTTP 页面有效）
-      if(!location.protocol.includes('https')) API=FALLBACK_API;
-      return API;
-    });
-}
-
 function api(url, opts){
-  const base = API || FALLBACK_API;
-  return fetch(base+url, opts).then(r=>r.json()).catch(()=>null);
+  return fetch(API+url, opts).then(r=>r.json()).catch(()=>null);
 }
 
 function loadCounter(){
@@ -211,7 +193,9 @@ const t=setInterval(()=>{
       document.getElementById('wallPanel').style.display='block';
       document.getElementById('footer').style.display='block';
       nextDog();
-      initAPI().then(()=>{ hit(); loadCounter(); loadWall(); });
+      hit();
+      loadCounter();
+      loadWall();
     },450);
   }
 },100);
