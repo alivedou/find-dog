@@ -19,41 +19,29 @@
     }
     h1 {
       font-size: clamp(2rem, 6vw, 4rem);
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
       background: linear-gradient(90deg, #f7971e, #ffd200);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
     .dog {
-      max-width: 400px;
-      width: 90%;
-      border-radius: 16px;
-      box-shadow: 0 0 40px rgba(247, 151, 30, 0.3);
-      margin-bottom: 1rem;
+      font-size: 8rem;
+      animation: bounce 0.6s infinite alternate ease-in-out;
+    }
+    @keyframes bounce {
+      from { transform: translateY(0) rotate(-3deg); }
+      to   { transform: translateY(-15px) rotate(3deg); }
     }
     .caption {
+      margin-top: 1.5rem;
       font-size: 0.9rem;
-      color: #666;
-    }
-    .loading { animation: pulse 1.5s infinite; }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 1; }
+      color: #555;
     }
   </style>
 </head>
 <body>
   <h1>找着了，就是你。</h1>
-  <img class="dog loading" id="dog" alt="一只看着你的狗" />
+  <div class="dog">🐶</div>
   <div class="caption">find.exp.dog</div>
-  <script>
-    fetch('https://dog.ceo/api/breeds/image/random')
-      .then(r => r.json())
-      .then(d => {
-        const img = document.getElementById('dog');
-        img.src = d.message;
-        img.classList.remove('loading');
-      });
-  </script>
 </body>
 </html>
