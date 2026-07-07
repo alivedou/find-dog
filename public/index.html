@@ -36,7 +36,10 @@ button{border:none;border-radius:10px;padding:12px 20px;cursor:pointer;font-size
 .wall-input{display:flex;gap:8px}
 .wall-input input{flex:1;background:#0b1220;border:1px solid #333;color:#fff;padding:8px 12px;border-radius:8px;outline:none;font-size:.9rem}
 .wall-input input:focus{border-color:#ffbf47}
-footer{text-align:center;margin-top:20px;color:#7f8794}
+footer{text-align:center;margin-top:20px;color:#7f8794;font-size:.85rem}
+.lang-toggle{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}
+.lang-toggle button{background:transparent;border:1px solid #555;color:#aaa;padding:2px 8px;border-radius:6px;font-size:.75rem;cursor:pointer}
+.lang-toggle button.active{border-color:#ffbf47;color:#ffbf47}
 @keyframes fade{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 .shake{animation:shake .35s}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
@@ -47,41 +50,44 @@ footer{text-align:center;margin-top:20px;color:#7f8794}
 <body>
 <div class="wrap">
 <div class="panel" id="panel">
-<h1>🔍 正在全网寻找水经验的人…</h1>
-<div class="sub">find.exp.dog 正在分析论坛发帖记录</div>
+<h1 data-i18n="scanTitle">🔍 正在全网寻找水经验的人…</h1>
+<div class="sub" data-i18n="scanSub">find.exp.dog 正在分析论坛发帖记录</div>
 <div id="scan">
-<div class="line"><span>✓ 已连接论坛数据库</span><span id="s1">0%</span></div>
+<div class="line"><span data-i18n="dbConnected">✓ 已连接论坛数据库</span><span id="s1">0%</span></div>
 <div class="bar"><div class="fill" id="f"></div></div>
-<div class="line"><span id="status">准备扫描…</span><span>Scanning...</span></div>
+<div class="line"><span id="status">准备扫描…</span><span data-i18n="scanning">Scanning...</span></div>
 </div>
 <div id="result">
-<h1>🎯 找着了，就是你。</h1>
-<p class="sub">（不要慌，只是随机抽中的一只狗 🐶）</p>
+<h1 data-i18n="resultTitle">🎯 找着了，就是你。</h1>
+<p class="sub" data-i18n="resultSub">（不要慌，只是随机抽中的一只狗 🐶）</p>
 <div class="dog" id="dog">🐶</div>
 <div class="quote" id="quote"></div>
 <div class="counter" id="counter"></div>
 <div class="btns">
-<button class="primary" onclick="nextDog()">🐶 再抓一只</button>
-<button class="secondary" id="shareBtn" onclick="share()">📋 分享</button>
+<button class="primary" data-i18n="nextDog" onclick="nextDog()">🐶 再抓一只</button>
+<button class="secondary" id="shareBtn" data-i18n="copyBtn" onclick="share()">📋 分享</button>
 </div>
 </div>
 </div>
 
 <div class="panel wall" id="wallPanel">
-<h3>🐾 水狗留言墙</h3>
-<div class="wall-list" id="wallList">加载中…</div>
+<h3 data-i18n="wallTitle">🐾 水狗留言墙</h3>
+<div class="wall-list" id="wallList" data-state="loading">加载中…</div>
 <div class="wall-input">
-<input id="wallInput" placeholder="被抓到了，留下句话…" maxlength="60" onkeydown="if(event.key==='Enter')postMsg()">
+<input id="wallInput" data-i18n-placeholder="wallPlaceholder" placeholder="被抓到了，留下句话…" maxlength="60" onkeydown="if(event.key==='Enter')postMsg()">
 <button class="secondary" style="padding:8px 14px;font-size:.85rem" onclick="postMsg()">🐶</button>
 </div>
 </div>
 
 <footer id="footer" style="display:none">
-  find.exp.dog &nbsp;|&nbsp;
-  留言墙内容为用户发布，不代表本站立场 &nbsp;|&nbsp;
-  Messages are user-generated and do not reflect the views of this site
+  <span data-i18n="footer">find.exp.dog &nbsp;|&nbsp; 留言墙内容为用户发布，不代表本站立场</span>
+  <span class="lang-toggle">
+    <button id="langZh" type="button" onclick="setLang('zh')">中</button>
+    <button id="langEn" type="button" onclick="setLang('en')">EN</button>
+  </span>
 </footer>
 </div>
+<script src="i18n.js"></script>
 <script>
 const API = 'https://dog.abcdou.bond';
 let visited = sessionStorage.getItem('v') === '1';
@@ -92,17 +98,25 @@ function api(url, opts){
 
 function loadCounter(){
   api('/api/count').then(d=>{
-    if(d) document.getElementById('counter').textContent = '🏆 你是第 '+d.count+' 个被找到的水狗';
+    if(d){
+      window.lastCount = d.count;
+      document.getElementById('counter').textContent = t('counter', {count: d.count});
+    }
   });
 }
 
 function loadWall(){
   api('/api/messages').then(msgs=>{
     const el = document.getElementById('wallList');
-    if(!msgs || !msgs.length){ el.innerHTML='<div style="color:#666;font-size:.85rem">还没有留言，做第一个被抓到的狗 🐶</div>'; return; }
+    if(!msgs || !msgs.length){
+      el.dataset.state = 'empty';
+      el.innerHTML='<div style="color:#666;font-size:.85rem">'+t('wallEmpty')+'</div>';
+      return;
+    }
+    el.dataset.state = 'loaded';
     el.innerHTML = msgs.reverse().map(m=>{
-      const t = new Date(m.time*1000);
-      const ts = t.getHours().toString().padStart(2,'0')+':'+t.getMinutes().toString().padStart(2,'0');
+      const dt = new Date(m.time*1000);
+      const ts = dt.getHours().toString().padStart(2,'0')+':'+dt.getMinutes().toString().padStart(2,'0');
       return '<div class="wall-item">'+ts+' —— '+esc(m.text)+'</div>';
     }).join('');
   });
@@ -127,28 +141,22 @@ function esc(s){
   return d.innerHTML;
 }
 
-const tips=[
-"经验+1。",
-"今天也是认真水经验的一天。",
-"已通知版主（假的）。",
-"水帖嫌疑人已锁定。",
-"论坛最靓的狗出现了。",
-"放心，这只是随机抽中的狗。",
-"今日水经验指数：99%。"
-];
-
 function hit(){
   if(visited) return;
   visited = true;
   sessionStorage.setItem('v','1');
   api('/api/hit', {method:'POST'}).then(d=>{
-    if(d) document.getElementById('counter').textContent = '🏆 你是第 '+d.count+' 个被找到的水狗';
+    if(d){
+      window.lastCount = d.count;
+      document.getElementById('counter').textContent = t('counter', {count: d.count});
+    }
   });
 }
 
 function nextDog(){
   const q=document.getElementById('quote');
   const d=document.getElementById('dog');
+  const tips = getTips();
   q.textContent=tips[Math.floor(Math.random()*tips.length)];
   // 先切 emoji 兜底
   d.innerHTML='🐶';
@@ -164,9 +172,9 @@ function share(){
   const url=location.href;
   const btn=document.getElementById('shareBtn');
   const ok=()=>{
-    btn.textContent="✅ 已复制";
+    btn.textContent=t('copiedBtn');
     btn.classList.add('copied');
-    setTimeout(()=>{btn.textContent="📋 分享";btn.classList.remove('copied');},1500);
+    setTimeout(()=>{btn.textContent=t('copyBtn');btn.classList.remove('copied');},1500);
   };
   if(navigator.clipboard&&window.isSecureContext){
     navigator.clipboard.writeText(url).then(ok,fallback);
@@ -176,21 +184,24 @@ function share(){
     ta.value=url;ta.style.position='fixed';ta.style.opacity='0';
     document.body.appendChild(ta);ta.select();
     try{document.execCommand('copy');ok();}
-    catch(e){prompt("手动复制：",url);}
+    catch(e){prompt(t('manualCopy'),url);}
     document.body.removeChild(ta);
   }
 }
 
-const msgs=["读取发帖记录...","分析水经验指数...","锁定可疑目标...","目标确认..."];
+window.scanDone = false;
 let p=0,i=0;
-const t=setInterval(()=>{
+document.getElementById('status').textContent = t('scanReady');
+const scanTimer=setInterval(()=>{
+  const msgs = getScanMsgs();
   p+=5;
   document.getElementById('f').style.width=p+"%";
   document.getElementById('s1').textContent=p+"%";
   document.getElementById('status').textContent=msgs[Math.min(i,msgs.length-1)];
   if(p%25===0)i++;
   if(p>=100){
-    clearInterval(t);
+    clearInterval(scanTimer);
+    window.scanDone = true;
     document.body.classList.add('flash');
     document.getElementById('panel').classList.add('shake');
     setTimeout(()=>{
